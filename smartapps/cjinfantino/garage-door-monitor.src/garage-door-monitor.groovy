@@ -12,30 +12,25 @@
  *
  *  Garage Door Monitor
  *
- *  Author: SmartThings
+ *  Author: CJ Infantino
  */
 definition(
     name: "Garage Door Monitor",
     namespace: "cjinfantino",
     author: "CJ Infantino",
-    description: "Monitor your garage door and get a text message if it is open too long",
+    description: "Monitor Garage Door and send push notification if it's been open too long",
     category: "Safety & Security",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/garage_contact.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/garage_contact@2x.png"
 )
 
 preferences {
-	section("When the garage door is open...") {
-		input "tiltsensor", "capability.contactSensor", title: "Select Tile Sensor", required: true
+	section() {
+		input "tiltsensor", "capability.contactSensor", title: "Select Sensor:", required: true
 	}
-//	section("For too long...") {
-//		input "maxOpenTime", "number", title: "How long"
-//	}
-//	section("Text me at (optional, sends a push notification if not specified)...") {
-//        input("recipients", "contact", title: "Notify", description: "Send notifications to") {
-//            input "phone", "phone", title: "Phone number?", required: false
-//        }
-//	}
+	section() {
+		input "maxOpenTime", "number", title: "How Many Minutes?", required: true
+	}
 }
 
 def installed()
@@ -57,8 +52,11 @@ def initialize() {
 
 def contactHandler(evt) {
 	log.info "contactHandler called: $evt"
-    if (sendPush) {
-    	log.info "sending push notification to app"
-    	sendPush("The ${tiltsensor.displayName} is open!")
-	}        
+    // send the push notification when maxOpenTime has been reached
+    runIn((maxOpenTime * 60), "myPush")
+}
+
+def myPush() {
+    log.info "sending push notification to app"
+    sendPush("The ${tiltsensor.displayName} is open!")
 }
